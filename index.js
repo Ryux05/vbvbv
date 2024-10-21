@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
+const cors = require("cors");
 const bypassLink = require("./fluxus")
+app.use(cors()); // Enable CORS for all routes
 app.get("/", (req, res) => {
     res.json({ message: "Invalid Endpoint" });
 });
