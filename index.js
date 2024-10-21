@@ -18,7 +18,7 @@ app.post("/api/fluxus", async (req, res) => {
     const hcaptchaResponse = req.body['h-captcha-response']; // Ambil token hCaptcha
 
     // Verifikasi hCaptcha
-    const secretKey = 'YOUR_SECRET_KEY'; // Ganti dengan kunci rahasia Anda
+    const secretKey = 'ES_c9d9cc0e0f8a467c99480012beff3b79'; // Ganti dengan kunci rahasia Anda
     const verificationUrl = `https://hcaptcha.com/siteverify?secret=${secretKey}&response=${hcaptchaResponse}`;
 
     try {
