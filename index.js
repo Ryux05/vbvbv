@@ -7,6 +7,8 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Middleware untuk parsing JSON
 
+const HCAPTCHA_SECRET = 'ES_c9d9cc0e0f8a467c99480012beff3b79'; // Replace with your hCaptcha secret key
+
 // Home route
 app.get("/", (req, res) => {
     res.json({ message: "Invalid Endpoint" });
@@ -15,17 +17,19 @@ app.get("/", (req, res) => {
 // Fluxus API route
 app.post("/api/fluxus", async (req, res) => {
     const url = req.body.url;
-    const hcaptchaResponse = req.body['h-captcha-response']; // Ambil token hCaptcha
-
-    // Verifikasi hCaptcha
-    const secretKey = 'ES_c9d9cc0e0f8a467c99480012beff3b79'; // Ganti dengan kunci rahasia Anda
-    const verificationUrl = `https://hcaptcha.com/siteverify?secret=${secretKey}&response=${hcaptchaResponse}`;
+    const captchaResponse = req.body.captcha; // Get captcha response from the request
 
     try {
-        const verificationResponse = await axios.post(verificationUrl);
-        const verificationData = verificationResponse.data;
+        // Validate captcha response
+        const captchaValidationResponse = await axios.post(`https://hcaptcha.com/siteverify`, null, {
+            params: {
+                secret: HCAPTCHA_SECRET,
+                response: captchaResponse
+            }
+        });
 
-        if (!verificationData.success) {
+        // Check if the captcha was successful
+        if (!captchaValidationResponse.data.success) {
             return res.status(400).json({ message: "hCaptcha verification failed." });
         }
 
