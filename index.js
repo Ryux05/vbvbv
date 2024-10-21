@@ -1,22 +1,44 @@
 const express = require('express');
-const app = express();
 const cors = require("cors");
-const bypassLink = require("./fluxus")
-app.use(cors()); // Enable CORS for all routes
+const axios = require('axios');
+const bypassLink = require("./fluxus");
+
+const app = express();
+app.use(cors());
+app.use(express.json()); // Middleware untuk parsing JSON
+
+// Home route
 app.get("/", (req, res) => {
     res.json({ message: "Invalid Endpoint" });
 });
-app.get("/api/fluxus", async (req, res) => {
-    const url = req.query.url;
-    if (url && url.startsWith("https://flux.li/android/external/start.php?HWID=")) {
-        try {
+
+// Fluxus API route
+app.post("/api/fluxus", async (req, res) => {
+    const url = req.body.url;
+    const hcaptchaResponse = req.body['h-captcha-response']; // Ambil token hCaptcha
+
+    // Verifikasi hCaptcha
+    const secretKey = 'YOUR_SECRET_KEY'; // Ganti dengan kunci rahasia Anda
+    const verificationUrl = `https://hcaptcha.com/siteverify?secret=${secretKey}&response=${hcaptchaResponse}`;
+
+    try {
+        const verificationResponse = await axios.post(verificationUrl);
+        const verificationData = verificationResponse.data;
+
+        if (!verificationData.success) {
+            return res.status(400).json({ message: "hCaptcha verification failed." });
+        }
+
+        // Cek URL
+        if (url && url.startsWith("https://flux.li/android/external/start.php?HWID=")) {
             const { key, timeTaken } = await bypassLink(url);
             return res.json({ key, time_taken: timeTaken, credit: "myuko" });
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
+        } else {
+            return res.status(400).json({ message: "Please Enter a Valid Fluxus Link!" });
         }
-    } else {
-        return res.json({ message: "Please Enter Fluxus Link!" });
+    } catch (error) {
+        console.error("Error during hCaptcha verification:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
